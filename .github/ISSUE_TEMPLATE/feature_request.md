@@ -1,24 +1,24 @@
 ---
-name: Feature request
-about: Suggest an enhancement
+name: 功能建议
+about: 提议一个增强功能
 title: '[FEAT] '
 labels: enhancement
 assignees: ''
 ---
 
-## What problem does this solve
+## 它解决什么问题
 
-The motivating use case. Concrete is better than abstract.
+具体的使用场景。具体的描述比抽象的更有帮助。
 
-## Proposed solution
+## 提议方案
 
-What you'd like to see. Sketch the API or behavior if you can.
+你希望看到的样子。能写出 API/行为草图最好。
 
-## Alternatives considered
+## 考虑过的备选
 
-Other approaches you thought about and why they don't work.
+你想过哪些其他做法,以及为什么它们行不通。
 
-## Scope check
+## 范围检查
 
-- [ ] Stays within the [CONTRIBUTING.md](../../CONTRIBUTING.md) ground rules (no new deps, debug-only, small files)
-- [ ] Doesn't duplicate existing skill-level functionality
+- [ ] 符合 [CONTRIBUTING.md](../../CONTRIBUTING.md) 的基本原则(不引入新依赖、仅 debug 启用、文件小)
+- [ ] 不和 skill 层已有功能重复

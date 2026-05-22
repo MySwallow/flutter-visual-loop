@@ -1,53 +1,44 @@
-# Security Policy
+# 安全策略
 
-## Reporting a vulnerability
+## 如何上报漏洞
 
-Please email security issues to MySwallow on GitHub (open a GitHub
-Security Advisory, not a public issue):
+请通过 GitHub Security Advisory(不要开 public issue)上报安全问题:
 
 https://github.com/MySwallow/flutter-visual-loop/security/advisories/new
 
-You should hear back within 48 hours.
+48 小时内会有响应。
 
-## Threat model — what the SDK guards against
+## 威胁模型 — SDK 防范哪些东西
 
-The `flutter_visual_loop` SDK is **debug-tooling**, not a production
-component. Its threat model is therefore narrow:
+`flutter_visual_loop` 是**调试工具**,不是生产组件。它的威胁模型相对收敛:
 
-| Threat                                       | Mitigation                                                   |
-|----------------------------------------------|--------------------------------------------------------------|
-| Accidentally shipping the control plane to production users | `enableInDebugOnly: true` by default — `start()` is a no-op in release builds |
-| Local malware reads/writes mock data         | Bind to `127.0.0.1` only; do not bind `0.0.0.0`              |
-| Network attacker on Wi-Fi                    | Bind to `127.0.0.1` only                                     |
-| DoS via huge body                            | `maxBodyBytes` defaults to 1 MiB; larger requests get 413    |
-| Malicious deep-link from another app         | The control plane is **not** a deep-link handler; cannot be invoked from another Android app without `adb forward` |
+| 威胁                                          | 缓解措施                                                          |
+|-----------------------------------------------|-------------------------------------------------------------------|
+| 误把控制平面带到生产用户手里                  | 默认 `enableInDebugOnly: true` — release 构建里 `start()` 是 no-op |
+| 本地恶意软件读写 mock 数据                    | 仅绑定 `127.0.0.1`,不允许绑 `0.0.0.0`                            |
+| Wi-Fi 上的网络攻击者                          | 仅绑定 `127.0.0.1`                                                |
+| 超大 body 导致 DoS                            | `maxBodyBytes` 默认 1 MiB,超过返回 413                           |
+| 来自其他 app 的恶意 deep-link                 | 控制平面**不是** deep-link handler,没有 `adb forward` 别的 app 进不来 |
 
-## What the SDK does NOT guard against
+## SDK 不防范的场景
 
-- **Same-device attackers**: anyone with code execution on your phone
-  can reach `127.0.0.1:9123`. If your dev device is compromised, this
-  SDK is the least of your worries.
-- **Eavesdropping over `adb forward`**: traffic between your laptop and
-  the device is unencrypted. Don't run the loop over public USB hubs
-  in untrusted environments.
-- **Mock data leakage**: mock values may contain sensitive fixtures
-  (auth tokens, user records). They live in app memory and disappear
-  when the app dies. Don't put real production secrets there.
+- **同设备攻击者**:任何在你手机上有代码执行能力的人都能访问 `127.0.0.1:9123`。如果你的开发设备已被入侵,SDK 不是你最该担心的问题。
+- **`adb forward` 链路被嗅探**:电脑和设备之间的流量是明文的。不要在不可信的公共 USB hub 上跑循环。
+- **Mock 数据泄露**:Mock 值可能含敏感 fixture(auth token、用户记录)。它们存在 app 内存里,app 死了就没了。不要把真实生产密钥放进去。
 
-## Hardening tips for your CI / shared dev environments
+## 在 CI / 共享开发环境里的加固建议
 
-- Set `enableInDebugOnly: true` (default).
-- Pin a non-default port if multiple Flutter projects share the laptop:
+- 保持 `enableInDebugOnly: true`(默认)。
+- 同一台电脑跑多个 Flutter 项目时,使用非默认端口:
   ```dart
   VisualLoopConfig(port: 9124)
   ```
-- After CI, ensure `adb forward --remove tcp:9123` runs (or
-  `--remove-all`) so other jobs don't accidentally hit a stale server.
-- Do not commit example mock data that contains real user PII.
+- CI 跑完确保执行 `adb forward --remove tcp:9123`(或 `--remove-all`),避免其他 job 误连到旧 server。
+- 不要把含真实用户 PII 的 mock 数据提交进 example。
 
-## Supported versions
+## 支持的版本
 
-| Version | Supported          |
+| 版本    | 是否支持           |
 |---------|--------------------|
 | 0.1.x   | :white_check_mark: |
 | < 0.1   | :x:                |

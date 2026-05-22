@@ -1,9 +1,9 @@
-# Changelog
+# 更新日志
 
-## 0.1.0 (initial release)
+## 0.1.0 (首次发布)
 
-- Debug-only HTTP server on `127.0.0.1:9123` (configurable).
-- Endpoints: `/health`, `/routes`, `/navigate`, `/reset`, `/mock`, `/screenshot`.
-- `MockDataProvider` interface with `InMemoryMockDataProvider` default impl.
-- `VisualLoopRoot` widget wrapper for reliable in-app screenshots.
-- Production builds are no-op (gated by `kDebugMode`).
+- 仅 debug 启用的 HTTP server,默认绑 `127.0.0.1:9123`(可配置)。
+- Endpoints: `/health`, `/routes`, `/navigate`, `/reset`, `/mock`, `/screenshot`。
+- `MockDataProvider` 接口 + `InMemoryMockDataProvider` 默认实现。
+- `VisualLoopRoot` Widget 包装,让 app 内截图更可靠。
+- Release 构建是 no-op(由 `kDebugMode` 守门)。

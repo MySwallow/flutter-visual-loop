@@ -1,13 +1,12 @@
-# Troubleshooting
+# 故障排查
 
-Real-world failure modes and how to recover. Symptoms grouped by where
-they surface.
+现实里会碰到的失败模式 + 恢复方式。按"现象在哪一层暴露"分组。
 
-## `env_check.sh` fails
+## `env_check.sh` 失败
 
 ### `ERR: adb not installed`
 
-Install Android platform-tools:
+安装 Android platform-tools:
 
 ```bash
 # macOS
@@ -16,7 +15,7 @@ brew install --cask android-platform-tools
 # Ubuntu
 sudo apt install adb
 
-# Then verify
+# 验证
 adb --version
 ```
 
@@ -24,11 +23,11 @@ adb --version
 
 ```bash
 adb devices
-# If empty: enable USB debugging in Developer Options on phone,
-# accept the RSA fingerprint prompt on first connect.
+# 如果是空的:在手机的"开发者选项"里开 USB 调试,
+# 第一次连的时候在手机上接受 RSA 指纹弹窗。
 ```
 
-For emulators, start one first:
+模拟器先起一个:
 
 ```bash
 emulator -list-avds
@@ -37,195 +36,178 @@ emulator -avd <name> -no-snapshot-load &
 
 ### `ERR: SDK not reachable on 127.0.0.1:9123`
 
-The Flutter app is not running, or it's running but didn't call
-`FlutterVisualLoop.start()`, or port forward is missing.
+要么 Flutter app 没在跑,要么跑了但没调 `FlutterVisualLoop.start()`,要么端口转发没设。
 
-Checklist:
+检查清单:
 
 ```bash
-# 1. Is flutter run alive?
+# 1. flutter run 还在吗?
 jobs | grep flutter
-# Or look for the process
+# 或者直接找进程
 pgrep -f 'flutter run'
 
-# 2. Is port forward set up?
+# 2. 端口转发设了吗?
 adb forward --list | grep 9123
-# If not:
+# 没的话:
 adb forward tcp:9123 tcp:9123
 
-# 3. Did the SDK actually bind?
-# In flutter run output you should see:
+# 3. SDK 真的 bind 了吗?
+# flutter run 输出里应该有:
 #   [flutter_visual_loop] listening on http://127.0.0.1:9123
-# If missing, the app never called FlutterVisualLoop.start() — check main.dart
+# 没有的话,app 没调过 FlutterVisualLoop.start() — 查 main.dart
 
-# 4. Is something else holding 9123 on host?
+# 4. 主机上有别的东西占了 9123 吗?
 lsof -i :9123
-# If yes, kill that or change port via VisualLoopConfig(port: 9124).
+# 有的话杀掉,或者改用 VisualLoopConfig(port: 9124)
 ```
 
-## `/navigate` issues
+## `/navigate` 问题
 
-### Returns `503 navigator not ready`
+### 返回 `503 navigator not ready`
 
-The app is still booting. Either:
+App 还在启动。任选其一:
 
-- Wait ~500ms and retry once.
-- Defer `FlutterVisualLoop.start(autoStart: false)` and call
-  `FlutterVisualLoop.bind()` after first frame.
+- 等 ~500ms 重试一次。
+- 用 `FlutterVisualLoop.start(autoStart: false)` 延后,第一帧后调 `FlutterVisualLoop.bind()`。
 
-### Returns `500 ...` with route name in error
+### 返回 `500 ...`,error 里带路由名
 
-The route name didn't match anything in `onGenerateRoute` (or static
-`routes:` map). Check:
+路由名没匹配上 `onGenerateRoute`(或静态 `routes:` map)。查:
 
 ```bash
 curl http://localhost:9123/routes
-# What's registered. If your route isn't there, register it:
+# 看现有注册了什么。你的路由不在的话:
 FlutterVisualLoop.routes.register('/your/route');
 ```
 
-Note that `/routes` only shows **registered** routes — `/navigate` will
-still try to push **any** name through `onGenerateRoute`, so the error
-likely means your router really doesn't handle that path.
+注意 `/routes` 只显示**已注册**的;`/navigate` 还是会把**任何**名字往 `onGenerateRoute` 推 — 报错说明 router 真的不认识那个 path。
 
-### Page changes but UI doesn't update
+### 页面切换了但 UI 没更新
 
-Probably your page reads from state that hasn't been refreshed. Quick
-fixes:
+通常是页面读的 state 没刷新。临时修法:
 
-- Add `popUntilRoot: true` (it's the default) to force a fresh mount.
-- Reset mock data between navigations: `POST /reset {"clearMock":true}`.
+- 加 `popUntilRoot: true`(默认就是)强制重新 mount。
+- 两次跳转之间重置 mock:`POST /reset {"clearMock":true}`。
 
-## Screenshot issues
+## 截图问题
 
-### `/screenshot` returns 500
+### `/screenshot` 返回 500
 
-The host didn't wrap its root with `VisualLoopRoot`. Either:
+宿主没用 `VisualLoopRoot` 包根。任选其一:
 
-- Fix: `runApp(VisualLoopRoot(child: MyApp()))`.
-- Workaround: use `adb exec-out screencap -p > cur.png` in your loop.
+- 修:`runApp(VisualLoopRoot(child: MyApp()))`。
+- 绕开:循环里用 `adb exec-out screencap -p > cur.png`。
 
-### Screenshot is all-black
+### 截图全黑
 
-Device screen turned off. Wake it:
+设备屏幕灭了。唤醒:
 
 ```bash
-adb shell input keyevent 26      # power button
-adb shell input keyevent 82      # menu, dismiss lock screen prompt
+adb shell input keyevent 26      # 电源键
+adb shell input keyevent 82      # menu,关掉锁屏提示
 ```
 
-If lock screen requires PIN, set up the test device with no lock for
-the duration of the loop.
+如果锁屏需要 PIN,在测试期间把测试设备的锁屏关掉。
 
-### Screenshot looks zoomed/wrong scale
+### 截图被缩放了
 
-You probably forgot to `adb forward` or the `wm size`/`wm density`
-overrides are mismatched. Check:
+通常是漏了 `adb forward`,或者 `wm size` / `wm density` 覆写不匹配。检查:
 
 ```bash
-adb shell wm size       # current logical
-adb shell wm density    # current dpi
+adb shell wm size       # 当前逻辑分辨率
+adb shell wm density    # 当前 dpi
 ```
 
-If you set `wm size 1080x2400` but `wm density` is still your phone's
-default (say 422dpi for Pixel 7), the result is a different effective
-DP. The skill records originals and restores on `reset_device.sh`, but
-if you killed the session uncleanly, run it manually:
+如果你设了 `wm size 1080x2400` 但 `wm density` 还是手机默认值(比如 Pixel 7 的 422dpi),实际 DP 就和预期不符。Skill 会记录原始值并在 `reset_device.sh` 时还原 — 但如果你非正常退出,手动跑一次:
 
 ```bash
 bash skills/flutter-visual-loop/scripts/reset_device.sh
-# or
+# 或者
 adb shell wm size reset
 adb shell wm density reset
 ```
 
-## Mock issues
+## Mock 相关问题
 
-### `/mock` returns `501 no MockDataProvider configured`
+### `/mock` 返回 `501 no MockDataProvider configured`
 
-You called `FlutterVisualLoop.start()` without `mockProvider:`. Add one:
+你调 `FlutterVisualLoop.start()` 时没传 `mockProvider:`。加一个:
 
 ```dart
 final mock = InMemoryMockDataProvider();
 await FlutterVisualLoop.start(mockProvider: mock);
 ```
 
-### Mock value updates but UI doesn't reflect
+### Mock 值改了但 UI 没反应
 
-Your repository/service is caching the result. Common fixes:
+Repository / service 在缓存结果。常见修法:
 
-- Disable caching in debug:
+- debug 下禁掉缓存:
   ```dart
   if (kDebugMode) cache.clear();
   ```
-- Or `POST /reset` after `POST /mock`, then re-navigate — the new
-  mount reads fresh.
+- 或者 `POST /mock` 后跟一次 `POST /reset`,然后重新跳转 — 新 mount 读新数据。
 
-## Hot reload issues
+## 热重载问题
 
-### `hot_reload.sh` says `nobody is reading FIFO`
+### `hot_reload.sh` 报 `nobody is reading FIFO`
 
-Either `flutter run` exited, or you started it without the fifo. Re-start:
+要么 `flutter run` 退了,要么启动时没接 fifo。重启:
 
 ```bash
 mkfifo /tmp/flutter-vl-stdin 2>/dev/null || true
 flutter run -d <device> < /tmp/flutter-vl-stdin &
 ```
 
-### Code changes not picked up
+### 改了代码没生效
 
-- Hot reload doesn't pick up changes to `main()` or global initializers.
-  Use hot restart instead: `echo R > /tmp/flutter-vl-stdin`.
-- Changes to const constructors only refresh after restart.
+- 热重载不会捕获 `main()` 和顶层初始化的改动。用热重启代替:`echo R > /tmp/flutter-vl-stdin`。
+- 改了 const constructor 也要重启才生效。
 
-## Device left in weird state after a run
+## 任务结束后设备状态奇怪
 
 ```bash
 adb shell wm size reset
 adb shell wm density reset
 
-# If overscan was set:
+# 如果之前设过 overscan:
 adb shell wm overscan reset
 
-# If screen left off:
+# 如果屏幕灭着:
 adb shell input keyevent 26
 
-# If the app is stuck in a weird route:
+# 如果 app 卡在奇怪的路由:
 curl -X POST http://localhost:9123/reset -d '{"clearMock":true}'
-# or just relaunch:
+# 或者干脆重启 app:
 adb shell am force-stop com.example.visualloop
 ```
 
-## "It works on Android but not iOS"
+## "Android 上没问题,iOS 上不行"
 
-The skill is Android-only because:
+Skill 是 Android-only,因为:
 
-- iOS Simulator screenshots: `xcrun simctl io booted screenshot` (works)
-- iOS deep-link / port forward: doesn't exist (no analog to `adb forward`)
+- iOS Simulator 截图:`xcrun simctl io booted screenshot`(能用)
+- iOS deep-link / port forward:不存在(没有 `adb forward` 等价物)
 
-For iOS Simulator support, you'd need to:
+想支持 iOS Simulator,得:
 
-- Bind SDK to a UNIX socket instead of TCP, OR
-- Use `simctl spawn` + a port that's accessible from host (not a
-  separate network namespace)
+- SDK 改成绑 UNIX socket 而不是 TCP,**或者**
+- 用 `simctl spawn` + 一个能从主机访问的端口(不在隔离的 network namespace 里)
 
-Patches welcome.
+欢迎 PR。
 
-## Specific to Chinese OEM ROMs (MIUI, HarmonyOS, ColorOS, …)
+## 中国厂商 ROM 特殊情况(MIUI、HarmonyOS、ColorOS 等)
 
-These ROMs sometimes silently reject `wm size`/`wm density`. After
-running `setup.sh`, verify:
+这些 ROM 有时会静默拒绝 `wm size` / `wm density`。跑完 `setup.sh` 后验证:
 
 ```bash
 adb shell wm size
-# Expect: "Physical size: ..." AND "Override size: 1080x2400"
-# If no Override line, the change was rejected.
+# 期望: "Physical size: ..." 加上 "Override size: 1080x2400"
+# 没有 Override 那行说明改动被拒了。
 ```
 
-Workarounds:
+绕开方案:
 
-- Run with `--no-lock` (skip resolution change) and live with whatever
-  the device default is.
-- Use a different device for design-conformance work.
-- Try with ADB owner / device owner permissions (advanced; voids
-  warranty on some devices).
+- 用 `--no-lock`(跳过分辨率改动),接受设备默认。
+- 换一台设备做设计还原。
+- 试 ADB owner / device owner 权限(高级;部分设备会丢保修)。

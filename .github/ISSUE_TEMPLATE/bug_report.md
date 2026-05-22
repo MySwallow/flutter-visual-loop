@@ -1,43 +1,43 @@
 ---
-name: Bug report
-about: Report a reproducible bug in the SDK or skill
+name: Bug 报告
+about: 报告 SDK 或 Skill 里可复现的 bug
 title: '[BUG] '
 labels: bug
 assignees: ''
 ---
 
-## What happened
+## 发生了什么
 
-A clear description of the bug.
+简要描述这个 bug。
 
-## Steps to reproduce
+## 复现步骤
 
 1.
 2.
 3.
 
-## Expected behavior
+## 期望行为
 
 
 
-## Actual behavior
+## 实际行为
 
 
 
-## Environment
+## 环境
 
-- OS: macOS / Linux / Windows
-- Flutter version: (output of `flutter --version`)
-- SDK version: (from `pubspec.yaml`)
-- Device: real device / emulator (model, Android version, ROM)
+- 操作系统: macOS / Linux / Windows
+- Flutter 版本: (运行 `flutter --version` 的输出)
+- SDK 版本: (`pubspec.yaml` 里写的)
+- 设备: 真机 / 模拟器 (型号、Android 版本、ROM)
 - `adb --version`:
 
-## Logs
+## 日志
 
 ```
-paste relevant flutter run / adb output here
+把相关的 flutter run / adb 输出粘到这里
 ```
 
-## Anything else
+## 其他
 
-Screenshots, related issues, hypotheses about cause.
+截图、相关 issue、对原因的猜测。

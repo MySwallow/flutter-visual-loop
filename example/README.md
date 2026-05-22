@@ -1,17 +1,17 @@
-# Visual Loop demo app
+# Visual Loop 演示 app
 
-A throwaway Flutter app to verify the SDK + skill end-to-end.
+一个用来端到端验证 SDK + Skill 的简单 Flutter app。
 
-## Run
+## 启动
 
 ```bash
 cd example
-flutter create . --platforms=android,ios --org com.example.visualloop  # generates android/ ios/ if missing
+flutter create . --platforms=android,ios --org com.example.visualloop  # 第一次需要生成 android/ ios/
 flutter pub get
 flutter run -d <device-id>
 ```
 
-You should see:
+启动后你应该看到:
 
 ```
 [flutter_visual_loop] registered route: /
@@ -21,7 +21,7 @@ You should see:
 [flutter_visual_loop] listening on http://127.0.0.1:9123
 ```
 
-## Drive from your laptop
+## 从电脑端控制
 
 ```bash
 adb forward tcp:9123 tcp:9123
@@ -36,19 +36,19 @@ curl -X POST http://localhost:9123/navigate \
   -H 'content-type: application/json' \
   -d '{"route":"/order/detail","args":{"id":"ORD-001"}}'
 # → {"ok":true,"route":"/order/detail"}
-# device should jump to the order page
+# 设备应该跳转到订单页
 
 curl -X POST http://localhost:9123/mock \
   -H 'content-type: application/json' \
   -d '{"action":"set","key":"order","value":{"id":"ORD-007","amount":42.0,"status":"待发货","items":[]}}'
-# next time you navigate to /order/detail, the new mock data shows
+# 下次跳转到 /order/detail 会看到新的 mock 数据
 
 curl -X POST http://localhost:9123/reset \
   -H 'content-type: application/json' \
   -d '{"clearMock":true}'
 ```
 
-## Drive from Claude Code
+## 从 Claude Code 触发
 
 ```
 /flutter-visual-loop example/design/order_detail.md /order/detail

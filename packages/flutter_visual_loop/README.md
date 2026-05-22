@@ -1,13 +1,12 @@
 # flutter_visual_loop
 
-Debug-only HTTP control plane for Flutter apps. Powers the
-[`flutter-visual-loop`](../../skills/flutter-visual-loop/SKILL.md) Claude
-Code skill — but any client (curl, Postman, your own script) can talk to it.
+为 Flutter app 提供的"仅 debug 启用"的 HTTP 控制平面。给配套的
+[`flutter-visual-loop`](../../skills/flutter-visual-loop/SKILL.md) Claude Code skill 用,
+但任何能讲 HTTP 的客户端(curl、Postman、你自己的脚本)都能调。
 
-> **In release builds, this package is a no-op.** `start()` returns without
-> binding any socket. Safe to leave in production code.
+> **Release 构建里这个包是 no-op。** `start()` 直接返回,不绑任何 socket。可以放心留在生产代码里。
 
-## Install
+## 安装
 
 ```yaml
 dependencies:
@@ -17,15 +16,15 @@ dependencies:
       path: packages/flutter_visual_loop
 ```
 
-## Integrate (3 lines)
+## 集成(3 行)
 
 ```dart
 import 'package:flutter_visual_loop/flutter_visual_loop.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FlutterVisualLoop.start();                  // 1. start control server (debug only)
-  runApp(VisualLoopRoot(child: const MyApp()));     // 2. enables /screenshot
+  await FlutterVisualLoop.start();                  // 1. 启动控制 server(仅 debug)
+  runApp(VisualLoopRoot(child: const MyApp()));     // 2. 让 /screenshot 可用
 }
 
 class MyApp extends StatelessWidget {
@@ -34,18 +33,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: FlutterVisualLoop.navigatorKey, // 3. hand over navigator
+      navigatorKey: FlutterVisualLoop.navigatorKey, // 3. 把 navigator 让出来
       onGenerateRoute: appRouter,
     );
   }
 }
 
-// Somewhere during startup, register discoverable routes:
+// 启动时注册"可被发现"的路由:
 FlutterVisualLoop.routes.register('/home');
 FlutterVisualLoop.routes.register('/order/detail');
 ```
 
-Or pass them up-front:
+或者启动时一次传入:
 
 ```dart
 await FlutterVisualLoop.start(
@@ -53,7 +52,7 @@ await FlutterVisualLoop.start(
 );
 ```
 
-## With mock data
+## 接入 Mock 数据
 
 ```dart
 final mock = InMemoryMockDataProvider();
@@ -61,7 +60,7 @@ mock.set('user', {'name': 'Alice'});
 
 await FlutterVisualLoop.start(mockProvider: mock);
 
-// In your repository:
+// 在你的 repository 里:
 class UserRepo {
   UserRepo(this._mock);
   final MockDataProvider _mock;
@@ -77,18 +76,18 @@ class UserRepo {
 
 ## HTTP API
 
-| Method | Path        | Body                                                          | Response                          |
+| 方法   | 路径        | Body                                                          | Response                          |
 |--------|-------------|---------------------------------------------------------------|-----------------------------------|
 | GET    | /health     | —                                                             | `{"ok":true,"version":"..."}`     |
 | GET    | /routes     | —                                                             | `{"ok":true,"routes":[...]}`      |
 | POST   | /navigate   | `{"route":"/x","args":{...},"popUntilRoot":true}`             | `{"ok":true,"route":"/x"}`        |
 | POST   | /reset      | `{"clearMock":true}`                                          | `{"ok":true,"clearedMock":true}`  |
-| POST   | /mock       | `{"action":"set"\|"get"\|"reset"\|"enable"\|"list","key":"k","value":...,"enabled":true}` | depends on action |
-| GET    | /screenshot | —                                                             | `image/png` bytes (if mode=flutter) |
+| POST   | /mock       | `{"action":"set"\|"get"\|"reset"\|"enable"\|"list","key":"k","value":...,"enabled":true}` | 依 action 不同 |
+| GET    | /screenshot | —                                                             | `image/png` 字节(mode=flutter 时) |
 
-All error responses follow `{"ok":false,"error":"..."}`.
+所有错误响应统一格式:`{"ok":false,"error":"..."}`。
 
-## Connect from your laptop (Android device)
+## 从笔记本连(Android 设备)
 
 ```bash
 adb forward tcp:9123 tcp:9123
@@ -98,16 +97,16 @@ curl -X POST http://localhost:9123/navigate \
   -d '{"route":"/order/detail","args":{"id":"ORD-001"}}'
 ```
 
-## Configuration
+## 配置
 
 ```dart
 await FlutterVisualLoop.start(
   config: const VisualLoopConfig(
-    host: '127.0.0.1',                    // never use 0.0.0.0 in real apps
+    host: '127.0.0.1',                    // 真实 app 里别用 0.0.0.0
     port: 9123,
-    enableInDebugOnly: true,              // false to also run in profile
+    enableInDebugOnly: true,              // false 时 profile 也启
     autoStart: true,
-    screenshotMode: ScreenshotMode.flutter, // or .external (defer to adb)
+    screenshotMode: ScreenshotMode.flutter, // 或 .external(让 adb 截)
     maxBodyBytes: 1024 * 1024,
   ),
 );

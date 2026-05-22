@@ -1,12 +1,10 @@
-# Integration Guide
+# 集成指南
 
-Detailed patterns for integrating `flutter_visual_loop` into a real
-Flutter app — including mock data layering, GoRouter, BLoC/Riverpod,
-and real-API toggling.
+把 `flutter_visual_loop` 接入到真实 Flutter app 的详细模式 — 包括 mock 数据分层、GoRouter、BLoC/Riverpod、真实 API 切换。
 
-## 1. Add the dependency
+## 1. 添加依赖
 
-Until the package is on pub.dev, depend via git:
+发布到 pub.dev 之前,通过 git 依赖:
 
 ```yaml
 # your_app/pubspec.yaml
@@ -17,7 +15,7 @@ dependencies:
       path: packages/flutter_visual_loop
 ```
 
-Or as a local `path:` if you've vendored the package:
+如果你 vendor 了一份本地拷贝,也可以用 `path:`:
 
 ```yaml
 dependencies:
@@ -25,7 +23,7 @@ dependencies:
     path: ../flutter-visual-loop/packages/flutter_visual_loop
 ```
 
-## 2. Wire up `main()`
+## 2. 连接 `main()`
 
 ```dart
 import 'package:flutter/material.dart';
@@ -34,22 +32,19 @@ import 'package:flutter_visual_loop/flutter_visual_loop.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // (a) start the SDK — production builds skip this automatically
+  // (a) 启动 SDK — release 构建自动跳过
   await FlutterVisualLoop.start(
     testRoutes: const ['/home', '/login', '/order/detail'],
   );
 
-  // (b) wrap your root with VisualLoopRoot so /screenshot can capture
+  // (b) 用 VisualLoopRoot 包根,/screenshot 才能可靠工作
   runApp(VisualLoopRoot(child: const MyApp()));
 }
 ```
 
-If you can't use `VisualLoopRoot` (e.g. you have a custom binding setup),
-ignore the `/screenshot` endpoint and let the skill use `adb screencap`
-exclusively — it's the better choice on Android anyway because it
-captures the full device frame.
+如果你不方便用 `VisualLoopRoot`(比如有自定义 binding 初始化),那就忽略 `/screenshot` endpoint,让 skill 一直走 `adb screencap` — 在 Android 上这反而是更优选择,因为它能截到完整设备帧。
 
-## 3. Hand the navigator over
+## 3. 把 navigator 让出来
 
 ```dart
 class MyApp extends StatelessWidget {
@@ -65,29 +60,25 @@ class MyApp extends StatelessWidget {
 }
 ```
 
-> Why a shared `navigatorKey`? `Navigator.of(context)` needs a context.
-> The SDK's HTTP handler doesn't have one. A `GlobalKey<NavigatorState>`
-> sidesteps that.
+> 为什么要共享 `navigatorKey`? `Navigator.of(context)` 需要 context。SDK 的 HTTP handler 没有 context。`GlobalKey<NavigatorState>` 绕开这个限制。
 
-## 4. Register routes (optional but recommended)
+## 4. 注册路由(可选但推荐)
 
 ```dart
-// Either up-front in start():
+// 启动时一次性传入:
 await FlutterVisualLoop.start(
   testRoutes: const ['/home', '/order/detail', '/login'],
 );
 
-// Or any time after:
+// 或之后任何时候:
 FlutterVisualLoop.routes.register('/cart');
 ```
 
-Registered routes appear in `GET /routes` so the skill can discover
-them. Unregistered routes still work via `/navigate` — registration is
-about discoverability, not gating.
+注册的路由会出现在 `GET /routes` 里供 skill 发现。未注册的路由仍然能被 `/navigate` push — 注册关乎"可发现性",不是"准入控制"。
 
-## 5. Mock-data layering
+## 5. Mock 数据分层
 
-The SDK doesn't dictate where mock data lives. Pattern:
+SDK 不规定 mock 数据放哪。一种典型模式:
 
 ```dart
 // services/user_repo.dart
@@ -104,12 +95,12 @@ class UserRepo {
   }
 
   Future<User> _httpFetch(String id) async {
-    // real network call
+    // 真实网络调用
   }
 }
 ```
 
-Plug it into the SDK:
+接入 SDK:
 
 ```dart
 final mock = InMemoryMockDataProvider()
@@ -118,23 +109,23 @@ final mock = InMemoryMockDataProvider()
 await FlutterVisualLoop.start(mockProvider: mock);
 
 final userRepo = UserRepo(mock: mock);
-// inject userRepo via your DI (provider / get_it / Riverpod) ...
+// 用你的 DI(provider / get_it / Riverpod)注入 userRepo ...
 ```
 
-The skill flips mock state via `POST /mock`:
+Skill 通过 `POST /mock` 切换 mock 状态:
 
 ```bash
-# Disable mock to hit real API
+# 关掉 mock 走真实 API
 curl -X POST localhost:9123/mock -d '{"action":"enable","enabled":false}'
 
-# Inject a different fixture
+# 注入不同 fixture
 curl -X POST localhost:9123/mock \
   -d '{"action":"set","key":"user.U1","value":{"id":"U1","name":"Bob"}}'
 ```
 
-## 6. GoRouter integration
+## 6. GoRouter 集成
 
-`navigatorKey` works with GoRouter via `GoRouter.navigatorKey`:
+`navigatorKey` 通过 `GoRouter.navigatorKey` 与 GoRouter 协作:
 
 ```dart
 final router = GoRouter(
@@ -148,40 +139,34 @@ final router = GoRouter(
 runApp(MaterialApp.router(routerConfig: router));
 ```
 
-For named GoRouter routes, you have two options:
+对于带命名的 GoRouter 路由,有两种选择:
 
-1. Use the URL-style path as the route name:
-   `POST /navigate {"route":"/order/123"}`. The SDK calls `pushNamed`,
-   GoRouter parses the URL.
+1. 用 URL 风格的 path 作为路由名:
+   `POST /navigate {"route":"/order/123"}`。SDK 调 `pushNamed`,GoRouter 解析 URL。
 
-2. Bridge in your own router handler — easiest is to wrap `pushNamed`
-   in your router and dispatch to `GoRouter.go(...)` based on a prefix.
+2. 自己桥接一层 — 最简单是包一层自己的 `pushNamed`,基于前缀 dispatch 到 `GoRouter.go(...)`。
 
-## 7. Real-API mode + auth tokens
+## 7. 真实 API 模式 + 鉴权 token
 
-When the skill flips mock off and you want real API calls in a debug
-build, you usually need a valid auth token. Two patterns:
+当 skill 关闭 mock 想跑真实 API,通常需要有效的 auth token。两种模式:
 
-**Pattern A — bake test token into debug:**
+**模式 A — 把测试 token 烧进 debug:**
 ```dart
 const debugAuthToken = String.fromEnvironment('TEST_AUTH_TOKEN');
 flutter run --dart-define=TEST_AUTH_TOKEN=eyJ...
 ```
 
-**Pattern B — inject via /mock:**
+**模式 B — 通过 /mock 注入:**
 ```bash
 curl -X POST localhost:9123/mock \
   -d '{"action":"set","key":"auth.token","value":"eyJ..."}'
 ```
 
-Your auth interceptor reads from `mock.get('auth.token')` first when
-`mock.enabled == false` but the key exists. Trade-off: a tiny bit of
-mock-data coupling buys you keep-real-API-loops-going.
+你的 auth 拦截器在 `mock.enabled == false` 但 key 存在时,优先读 `mock.get('auth.token')`。代价是一点 mock 数据耦合,换来"循环里也能持续打真实 API"。
 
-## 8. Disabling the SDK in profile/release
+## 8. 在 profile/release 里禁用 SDK
 
-Default `enableInDebugOnly: true` already does this. If you want it on
-in profile builds (for QA):
+默认 `enableInDebugOnly: true` 已经做了。如果你想在 profile 构建里也开(给 QA 用):
 
 ```dart
 await FlutterVisualLoop.start(
@@ -189,17 +174,14 @@ await FlutterVisualLoop.start(
 );
 ```
 
-Be careful — release+enabled means the HTTP port is open in production.
+小心 — release+enabled 意味着生产包里 HTTP 端口是开着的。
 
-## 9. CI / golden-test coexistence
+## 9. 跟 CI / golden test 共存
 
-This SDK is for interactive loops, not unit/golden tests. If you have
-both:
+这个 SDK 是给交互式循环用的,不是 unit/golden test。如果你两个都有:
 
-- `flutter test` runs in isolated process; SDK's `dart:io HttpServer`
-  is fine but pointless there.
-- Wrap `start()` in `if (!Platform.environment.containsKey('FLUTTER_TEST'))`
-  to skip the bind in test runs.
+- `flutter test` 跑在隔离进程里;SDK 的 `dart:io HttpServer` 能跑但跑了也没用。
+- 用 `Platform.environment.containsKey('FLUTTER_TEST')` 跳过 bind:
 
 ```dart
 import 'dart:io';
@@ -209,9 +191,9 @@ if (!Platform.environment.containsKey('FLUTTER_TEST')) {
 }
 ```
 
-## 10. Multi-flavor apps
+## 10. 多 flavor app
 
-Different flavors (dev/staging/prod) need different setup:
+不同 flavor(dev/staging/prod)需要不同 setup:
 
 ```dart
 Future<void> mainDev() async {
@@ -223,8 +205,8 @@ Future<void> mainDev() async {
 }
 
 Future<void> mainProd() async {
-  // SDK is no-op in release; you can still call start() — it returns
-  // immediately. Or skip entirely:
+  // SDK 在 release 里是 no-op;你仍然可以调 start() — 它会立即返回。
+  // 或者干脆跳过:
   runApp(MyApp());
 }
 ```

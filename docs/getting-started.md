@@ -1,17 +1,15 @@
-# Getting Started (5 minutes)
+# 快速上手(5 分钟)
 
-This guide walks you from zero to a working visual-loop iteration on a
-demo app. Once you've done it once, integrating the SDK into your own
-app is the same 3 steps.
+这份指南带你从零跑通一次视觉循环。跑一次之后,把 SDK 集成进你自己的 app 也是同样的 3 步。
 
-## Prerequisites
+## 前置条件
 
-- Flutter SDK 3.10+ — `flutter doctor` should be green
-- Android device with USB debugging on, OR Android emulator running
-- `adb` on PATH (comes with Android platform-tools)
+- Flutter SDK 3.10+ — `flutter doctor` 全绿
+- Android 真机(开了 USB 调试),或 Android 模拟器
+- `adb` 在 PATH 里(Android platform-tools 自带)
 - `curl`
 
-## Step 1 — Clone and bootstrap the demo
+## 第 1 步 — clone 并初始化 demo
 
 ```bash
 git clone https://github.com/MySwallow/flutter-visual-loop.git
@@ -20,13 +18,11 @@ flutter create . --platforms=android,ios --org com.example.visualloop
 flutter pub get
 ```
 
-`flutter create .` only adds `android/` and `ios/` scaffolding; existing
-files are left alone.
+`flutter create .` 只会补 `android/` 和 `ios/` 脚手架,已有文件不动。
 
-## Step 2 — Start the app with a hot-reload fifo
+## 第 2 步 — 用一个 fifo 启动 app(让 skill 能触发热重载)
 
-The fifo is what lets the skill send `r` to trigger hot reload between
-loop iterations.
+fifo 是 skill 把 `r` 发给 flutter run 触发热重载的通道。
 
 ```bash
 mkfifo /tmp/flutter-vl-stdin 2>/dev/null || true
@@ -34,13 +30,13 @@ flutter run -d $(adb devices | awk 'NR>1 && $2=="device"{print $1; exit}') \
   < /tmp/flutter-vl-stdin &
 ```
 
-Wait until you see:
+等到看见:
 
 ```
 [flutter_visual_loop] listening on http://127.0.0.1:9123
 ```
 
-## Step 3 — Forward the port
+## 第 3 步 — 端口转发
 
 ```bash
 adb forward tcp:9123 tcp:9123
@@ -48,28 +44,27 @@ curl http://localhost:9123/health
 # → {"ok":true,"version":"0.1.0","service":"flutter_visual_loop"}
 ```
 
-That's the entire setup. The skill drives everything after this.
+到此整个准备工作完成。之后的事 skill 会驱动。
 
-## Step 4 — Run the skill from Claude Code
+## 第 4 步 — 在 Claude Code 里跑 skill
 
-In a Claude Code session opened in the repo root:
+在 Claude Code 会话(打开了本 repo 根目录):
 
 ```
 /flutter-visual-loop example/design/order_detail.md /order/detail
 ```
 
-The skill will:
+Skill 会做这些事:
 
-1. Check device + SDK reachability.
-2. Ask you to confirm the design spec (PNG mode without a `.md` spec
-   file).
-3. Loop up to 5 rounds: navigate → screenshot → diff → edit → hot reload.
-4. Reset device `wm size`/`wm density` overrides.
-5. Write a report to `$CLAUDE_JOB_DIR/report.md`.
+1. 检查设备 + SDK 是否可达。
+2. (输入是 PNG 且无 `.md` spec 文件时)要求你确认设计 spec。
+3. 循环最多 5 轮:跳转 → 截图 → 对比 → 改代码 → 热重载。
+4. 还原设备 `wm size`/`wm density` 覆写。
+5. 输出一份报告到 `$CLAUDE_JOB_DIR/report.md`。
 
-## Step 5 — Adapt to your own app
+## 第 5 步 — 集成到你自己的 app
 
-Copy the integration pattern from `example/lib/main.dart`:
+照搬 `example/lib/main.dart` 的集成模式:
 
 ```dart
 import 'package:flutter_visual_loop/flutter_visual_loop.dart';
@@ -93,9 +88,8 @@ class MyApp extends StatelessWidget {
 }
 ```
 
-That's it. Next, read:
+到此就够了。继续读:
 
-- [`integration-guide.md`](integration-guide.md) for mock-data wiring
-  and real-API patterns.
-- [`api-reference.md`](api-reference.md) for the full HTTP contract.
-- [`troubleshooting.md`](troubleshooting.md) when things go wrong.
+- [`integration-guide.md`](integration-guide.md) — Mock 数据接入和真实 API 模式。
+- [`api-reference.md`](api-reference.md) — 完整 HTTP API。
+- [`troubleshooting.md`](troubleshooting.md) — 出问题时查。

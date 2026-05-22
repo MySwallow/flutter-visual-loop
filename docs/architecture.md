@@ -1,12 +1,12 @@
-# Architecture
+# 架构
 
-## High-level flow
+## 整体流程
 
 ```
 +--------------------+        +---------------------+        +-----------------+
-| Claude Code        |  HTTP  | flutter_visual_loop |  app   | Host Flutter    |
-| + flutter-visual-  | <----> | (debug HTTP server) | hooks  | App on device   |
-| loop skill         |  9123  | (in-process)        |        |                 |
+| Claude Code        |  HTTP  | flutter_visual_loop |  app   | 宿主 Flutter    |
+| + flutter-visual-  | <----> | (debug HTTP server) | hooks  | App 跑在设备上  |
+| loop skill         |  9123  | (进程内)            |        |                 |
 +--------------------+        +---------------------+        +-----------------+
         ^                                                          ^
         |                                                          |
@@ -14,41 +14,31 @@
         +----------------------------------------------------------+
 ```
 
-## Components
+## 组件
 
 ### SDK (`packages/flutter_visual_loop`)
 
-- **`FlutterVisualLoop`** facade — start/stop, exposes `navigatorKey`.
-- **`VisualLoopHttpServer`** — binds `127.0.0.1:9123` (configurable) using
-  `dart:io HttpServer`. Routes requests to handlers.
-- **Handlers** — one file per endpoint. Pure functions over a
-  request/response context. Keeps blast radius small.
-- **`RouteRegistry`** — wraps host app's named-route table so the skill can
-  discover available routes via `GET /routes`.
-- **`MockDataProvider`** — interface the host implements. Defaults to an
-  `InMemoryMockDataProvider`. SDK doesn't dictate where mock data goes —
-  host app injects it into repositories/services.
-- **`VisualLoopRoot`** — optional widget the host wraps around its root to
-  make `/screenshot` reliable (provides the `RepaintBoundary`).
+- **`FlutterVisualLoop`** 门面 — start/stop,暴露 `navigatorKey`。
+- **`VisualLoopHttpServer`** — 用 `dart:io HttpServer` 绑 `127.0.0.1:9123`(可配置),分发请求给 handler。
+- **Handlers** — 每个 endpoint 一个文件。基于 request/response context 的纯函数。让影响面尽量小。
+- **`RouteRegistry`** — 包装宿主 app 的命名路由表,skill 通过 `GET /routes` 拿到可发现的路由列表。
+- **`MockDataProvider`** — 宿主实现的接口。默认提供 `InMemoryMockDataProvider`。SDK 自身不会读 mock 数据,只把控制命令路由给 provider — 真正读数据是宿主 app 在 repository / service 里做。
+- **`VisualLoopRoot`** — 可选的 Widget 包装,宿主把它包在 root 上让 `/screenshot` 可靠地工作(提供 `RepaintBoundary`)。
 
 ### Skill (`skills/flutter-visual-loop`)
 
-- **`SKILL.md`** — top-level instructions. Reads design input, drives loop.
-- **`scripts/`** — small bash helpers. Skill stays declarative; scripts
-  hide adb/curl plumbing.
+- **`SKILL.md`** — 顶层指引,读设计稿、驱动循环。
+- **`scripts/`** — 小 bash 脚本。Skill 保持声明式,脚本封装 adb / curl 的细节。
 
-## Safety constraints
+## 安全约束
 
-- SDK refuses to start if `kDebugMode == false` (default config gate).
-- Server binds to `127.0.0.1` only — never exposes to LAN.
-- `adb wm size` / `wm density` overrides are recorded by the skill and
-  reset at task end (or on any failure path).
-- All endpoints log a single-line summary to debug console; bodies larger
-  than `maxBodyBytes` (default 1 MiB) get a 413.
+- 当 `kDebugMode == false` 时,SDK 拒绝启动(由默认 config 守门)。
+- Server 仅绑定 `127.0.0.1`,不暴露到 LAN。
+- `adb wm size` / `wm density` 覆写由 skill 记录,任务结束(或任何失败路径)必还原。
+- 每个 endpoint 在 debug console 输出一行汇总;超过 `maxBodyBytes`(默认 1 MiB)的请求返回 413。
 
-## What's intentionally NOT in the SDK
+## 故意**不**做的事
 
-- Hot reload triggering — `flutter run` owns that; skill drives it via
-  a fifo on the host machine.
-- Visual diffing — done by the LLM at skill level.
-- Figma client — skill uses existing `figma-context` MCP when input is a URL.
+- 触发热重载 — 那是 `flutter run` 自己的事,skill 通过 fifo 驱动。
+- 视觉对比 — 在 skill 层由 LLM 完成。
+- Figma 客户端 — 输入是 URL 时,skill 用现有的 `figma-context` MCP。

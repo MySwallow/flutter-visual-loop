@@ -1,23 +1,23 @@
-## Summary
+## 摘要
 
-<one or two bullets describing the change>
+<一两条 bullet 描述这个改动>
 
-## Why
+## 为什么改
 
-<the motivation — bug report link, use case, or design rationale>
+<动机 — bug 报告链接、使用场景、或设计思路>
 
-## What changed
+## 改了什么
 
-- file paths + brief notes
+- 文件路径 + 简短说明
 
-## Test plan
+## 测试计划
 
-- [ ] `flutter test` passes in `packages/flutter_visual_loop`
-- [ ] `bash scripts/validate.sh` passes
-- [ ] Manually ran `e2e-checklist.md` steps 3–5 on a real device
-- [ ] Updated `docs/api-reference.md` if HTTP API changed
-- [ ] Updated `CHANGELOG.md`
+- [ ] `flutter test` 在 `packages/flutter_visual_loop` 通过
+- [ ] `bash scripts/validate.sh` 通过
+- [ ] 在真机上手动跑过 `e2e-checklist.md` 的步骤 3–5
+- [ ] 如果改动了 HTTP API,更新了 `docs/api-reference.md`
+- [ ] 更新了 `CHANGELOG.md`
 
-## Breaking changes
+## 破坏性变更
 
-<yes/no — if yes, describe the migration>
+<是 / 否 — 是的话描述迁移方式>
