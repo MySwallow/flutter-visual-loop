@@ -28,16 +28,20 @@ See [`packages/flutter_visual_loop/README.md`](packages/flutter_visual_loop/READ
 and [`skills/flutter-visual-loop/SKILL.md`](skills/flutter-visual-loop/SKILL.md)
 for details.
 
-## Architecture
+## Documentation
 
-See [`docs/architecture.md`](docs/architecture.md). TL;DR: the SDK runs a
-debug-only HTTP server on `127.0.0.1:9123` inside the host app; the skill
-forwards that port via `adb` and drives the loop with `curl` +
-`adb exec-out screencap`.
-
-## End-to-end verification
-
-See [`docs/e2e-checklist.md`](docs/e2e-checklist.md).
+| Doc                                                           | What's in it                                          |
+|---------------------------------------------------------------|-------------------------------------------------------|
+| [`docs/getting-started.md`](docs/getting-started.md)          | 5-minute walkthrough from clone to first loop         |
+| [`docs/architecture.md`](docs/architecture.md)                | Component diagram + safety constraints                |
+| [`docs/api-reference.md`](docs/api-reference.md)              | Full HTTP API contract + curl recipes                 |
+| [`docs/integration-guide.md`](docs/integration-guide.md)      | Mock data, GoRouter, auth, multi-flavor patterns      |
+| [`docs/troubleshooting.md`](docs/troubleshooting.md)          | Failure modes grouped by symptom                      |
+| [`docs/e2e-checklist.md`](docs/e2e-checklist.md)              | Manual smoke test (run once after cloning)            |
+| [`docs/superpowers/plans/2026-05-21-flutter-visual-loop.md`](docs/superpowers/plans/2026-05-21-flutter-visual-loop.md) | Full implementation plan                  |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                          | How to add features / fix bugs                        |
+| [`SECURITY.md`](SECURITY.md)                                  | Threat model + how to report vulnerabilities          |
+| [`CHANGELOG.md`](CHANGELOG.md)                                | Release notes                                         |
 
 ## License
 
