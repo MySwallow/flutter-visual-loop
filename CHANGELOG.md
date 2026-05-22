@@ -5,6 +5,40 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),版本规则遵循
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)。
 
+## [0.2.0] — 2026-05-22
+
+### 重构 — Skill (`skills/flutter-visual-loop`)
+
+把 SKILL.md 从 163 行(含 7 个 shell 脚本 + checklist + 分辨率查表 + 失败模式表)
+重构为 6 行 thin orchestrator,与 `figma-visual-loop` skill 形态对标。
+新版职责仅限于:编排上游数据获取、调用下层设备驱动、视觉对比、改 Dart 代码、5 轮循环。
+
+- 删除 7 个内嵌设备驱动脚本(env_check / setup / navigate / capture / hot_reload / mock_set / reset_device);相关脚本迁至 [`flutterwright`](../flutterwright/) 仓库
+- 删除 PNG / PNG 目录 / `.md` spec 三种旧输入分支,仅保留两个入口:Figma URL 与 Mockplus URL
+- 设计稿数据获取改由上游 skill / MCP 提供:`figma-context` MCP 处理 Figma,`mockplus-context` skill 处理 Mockplus
+- 设备操作改由下层 `flutterwright` skill 提供(暂未实现,SKILL.md 已声明依赖)
+
+### 迁移 — SDK / Example / SDK 文档迁至 flutterwright 仓库
+
+以下物料从本仓库迁至 `~/Documents/dev/github/flutterwright/`,因其全部为设备驱动层物料:
+
+- `packages/flutter_visual_loop/` — Dart SDK(进程内 HTTP server + handlers + route registry + mock provider)
+- `example/` — SDK 演示 Flutter app(`pubspec.yaml` path 依赖 SDK,跟随迁出)
+- `docs/architecture.md` / `api-reference.md` / `getting-started.md` / `integration-guide.md` / `e2e-checklist.md` / `troubleshooting.md` — 全部描述 SDK + 设备驱动行为
+- `CONTRIBUTING.md` / `SECURITY.md` — 内容均针对 SDK(贡献规则、网络威胁模型)
+
+### 移除
+
+- `scripts/validate.sh` — 校验范围 70% 在迁出物料上
+- `.github/workflows/ci.yml` — 3 个 job 中 2 个完全依赖 SDK / example
+
+### 本仓库当前状态
+
+仅剩 skill 本体 + 设计文档 + 历史 plan + LICENSE + issue/PR 模板。CI 已移除。
+本仓库现已严格对标 `figma-visual-loop` 的纯 skill 仓库形态。
+
+详见 [`docs/superpowers/specs/2026-05-22-flutter-visual-loop-refocus-design.md`](docs/superpowers/specs/2026-05-22-flutter-visual-loop-refocus-design.md)。
+
 ## [0.1.0] — 2026-05-21
 
 ### 新增 — SDK (`packages/flutter_visual_loop`)

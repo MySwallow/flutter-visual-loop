@@ -1,49 +1,58 @@
-# Flutter Visual Loop
+# flutter-visual-loop
 
-自动化的 Figma / PNG → Flutter UI 还原循环。通过 `adb` 驱动真机或模拟器,
-截屏并基于设计稿用 Claude Code 迭代代码。
+Claude Code skill,自主驱动 Flutter UI 视觉对比循环 —— 给定设计稿 URL + 目标路由,Claude 自己拉资产、跑设备、视觉比对、改 Dart 代码、热重载,迭代到收敛。
 
-仓库里包含三样东西:
+## 目的
 
-| 路径                              | 是什么                                                  |
-|-----------------------------------|--------------------------------------------------------|
-| `packages/flutter_visual_loop/`   | Dart 包:任何 app 都能集成的 debug-only HTTP 控制 server |
-| `skills/flutter-visual-loop/`     | Claude Code skill,负责驱动整个循环                    |
-| `example/`                        | 演示 Flutter app,展示 SDK 集成方式                    |
+把"按设计稿还原 Flutter UI"这件事自动化。手工拉切图、量距离、改组件、热重载、再对比这套循环,Claude 自己跑,最多 5 轮。结束自动恢复设备状态。
 
-## 快速上手
+## 依赖的 skill / MCP
 
-1. 在 Flutter app 的 `pubspec.yaml` 里加 `flutter_visual_loop` 依赖
-   (pub.dev 发布前用 `path:` 或 `git:`)。
-2. `main()` 里调 `FlutterVisualLoop.start()`(仅 debug 启用)。
-3. 用 `flutter run -d <id>` 把 app 跑起来。
-4. 在 Claude Code 里:
+| 依赖 | 层级 | 角色 |
+|---|---|---|
+| `figma-context` MCP | 上游 | 当输入是 Figma frame URL 时,拉 frame data + 切图 |
+| `mockplus-context` skill | 上游 | 当输入是 Mockplus develop URL 时,产出 spec.md + design.png + assets/ |
+| `flutterwright` skill | 下层 | 驱动 Flutter 设备(setup / navigate / capture / hot_reload / mock_set / reset) |
 
-   ```
-   /flutter-visual-loop example/design/order_detail.png /order/detail
-   ```
+> ⚠️ **当前状态:** `flutterwright` skill 尚未实现,设备驱动调用暂时落空。设计稿数据获取(`figma-context` + `mockplus-context`)已可用;skill 的编排逻辑已重构。flutterwright 落地后即可端到端跑通。
 
-详见 [`packages/flutter_visual_loop/README.md`](packages/flutter_visual_loop/README.md)
-和 [`skills/flutter-visual-loop/SKILL.md`](skills/flutter-visual-loop/SKILL.md)。
+## 怎么用
 
-## 架构
+在已经集成 `flutter_visual_loop` SDK(见 [`flutterwright`](../flutterwright/) 仓库)且 app 跑在设备上的 Flutter 项目里,跟 Claude 说:
 
-详见 [`docs/architecture.md`](docs/architecture.md)。TL;DR:SDK 在宿主 app 进程内跑一个 debug-only 的 HTTP server,绑 `127.0.0.1:9123`;skill 用 `adb` 转发该端口,然后用 `curl` + `adb exec-out screencap` 驱动循环。
+> 按这个 Figma frame 还原 `/order/detail` 页面:
+> https://www.figma.com/...
 
-## 文档
+或者:
 
-| 文档                                                          | 内容                                                  |
-|---------------------------------------------------------------|------------------------------------------------------|
-| [`docs/getting-started.md`](docs/getting-started.md)          | 5 分钟从 clone 走到第一次循环                         |
-| [`docs/architecture.md`](docs/architecture.md)                | 组件图 + 安全约束                                     |
-| [`docs/api-reference.md`](docs/api-reference.md)              | 完整 HTTP API + curl 示例                             |
-| [`docs/integration-guide.md`](docs/integration-guide.md)      | Mock 数据、GoRouter、Auth、多 flavor 等集成模式       |
-| [`docs/troubleshooting.md`](docs/troubleshooting.md)          | 按现象分类的故障排查                                  |
-| [`docs/e2e-checklist.md`](docs/e2e-checklist.md)              | 手动 smoke test(clone 后跑一遍)                     |
-| [`docs/superpowers/plans/2026-05-21-flutter-visual-loop.md`](docs/superpowers/plans/2026-05-21-flutter-visual-loop.md) | 完整实施计划(英文,作为历史 artifact 保留) |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md)                          | 怎么加功能 / 修 bug                                   |
-| [`SECURITY.md`](SECURITY.md)                                  | 威胁模型 + 漏洞上报方式                               |
-| [`CHANGELOG.md`](CHANGELOG.md)                                | 版本变更记录                                          |
+> 按这个 Mockplus 页面还原 `/cart` 页面:
+> https://app.mockplus.cn/app/.../develop/design/...
+
+Claude 自己识别 URL 类型,调上游拉资产,调 flutterwright 跑设备,迭代到视觉收敛。
+
+## 仓库结构
+
+```
+.
+├── skills/flutter-visual-loop/SKILL.md    # skill 本体(6 行)
+├── docs/superpowers/
+│   ├── specs/                              # 设计 spec
+│   └── plans/                              # 实施 plan
+└── LICENSE
+```
+
+## 关联仓库
+
+| 仓库 | 内容 |
+|---|---|
+| [`flutterwright`](../flutterwright/) | Flutter 设备驱动 skill(规划中) + Dart SDK + 演示 app |
+| [`mockplus-context`](~/.claude/skills/mockplus-context) | Mockplus 设计稿抓取 skill |
+
+## 设计文档
+
+- [设计 spec — 2026-05-22](docs/superpowers/specs/2026-05-22-flutter-visual-loop-refocus-design.md):本次聚焦化重构的来龙去脉与契约
+- [实施 plan — 2026-05-22](docs/superpowers/plans/2026-05-22-flutter-visual-loop-refocus.md):任务级落地
+- [实施 plan — 2026-05-21](docs/superpowers/plans/2026-05-21-flutter-visual-loop.md):重构前的原 monorepo 实施 plan(历史档)
 
 ## 许可证
 
