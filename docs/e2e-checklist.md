@@ -2,6 +2,8 @@
 
 这份是手动 smoke test,证明 SDK + Skill 端到端工作正常。开发机器没有 Flutter 工具链(没有 `flutter`、没有 `dart`、没有 `adb`),所以 plan 作者没法跑;clone 之后在你笔记本上跑一次。
 
+> **注(2026-05-22):** 本文档反映 flutter-visual-loop **旧版**的脚本驱动行为。新版 skill 已重构为 thin orchestrator,实际设备操作(`env_check` / `setup` / `navigate` / `capture` / `hot_reload` / `mock_set` / `reset_device`)委托给 `flutterwright` skill(暂未实现,脚本已迁至 `~/Documents/dev/github/flutterwright/scripts/`)。文中的脚本提及保留作为历史参考,待 flutterwright 落地后整体重写。
+
 ## 前置条件
 
 - macOS / Linux,装了 **Flutter SDK**(`flutter doctor` 全绿)
@@ -114,10 +116,11 @@ adb shell wm density
 # 期望:只有 "Physical density: ..."(没有 "Override density:" 这行)
 ```
 
-如果还有 Override,手动跑:
+如果还有 Override,手动跑(skill 重构后设备 reset 已迁至 flutterwright,这里直接用 adb):
 
 ```bash
-bash skills/flutter-visual-loop/scripts/reset_device.sh
+adb shell wm size reset
+adb shell wm density reset
 ```
 
 ## 怎么算"工作正常"

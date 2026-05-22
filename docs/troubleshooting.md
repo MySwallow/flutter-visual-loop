@@ -2,6 +2,8 @@
 
 现实里会碰到的失败模式 + 恢复方式。按"现象在哪一层暴露"分组。
 
+> **注(2026-05-22):** 本文档反映 flutter-visual-loop **旧版**的脚本驱动行为。新版 skill 已重构为 thin orchestrator,实际设备操作(`env_check` / `setup` / `navigate` / `capture` / `hot_reload` / `mock_set` / `reset_device`)委托给 `flutterwright` skill(暂未实现,脚本已迁至 `~/Documents/dev/github/flutterwright/scripts/`)。下文中的脚本提及保留作为历史参考,待 flutterwright 落地后整体重写。
+
 ## `env_check.sh` 失败
 
 ### `ERR: adb not installed`
@@ -118,11 +120,9 @@ adb shell wm size       # 当前逻辑分辨率
 adb shell wm density    # 当前 dpi
 ```
 
-如果你设了 `wm size 1080x2400` 但 `wm density` 还是手机默认值(比如 Pixel 7 的 422dpi),实际 DP 就和预期不符。Skill 会记录原始值并在 `reset_device.sh` 时还原 — 但如果你非正常退出,手动跑一次:
+如果你设了 `wm size 1080x2400` 但 `wm density` 还是手机默认值(比如 Pixel 7 的 422dpi),实际 DP 就和预期不符。设备 reset 已迁至 flutterwright skill,这里手动跑 adb 即可:
 
 ```bash
-bash skills/flutter-visual-loop/scripts/reset_device.sh
-# 或者
 adb shell wm size reset
 adb shell wm density reset
 ```
