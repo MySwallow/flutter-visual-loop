@@ -30,11 +30,29 @@ Claude Code skill,自主驱动 Flutter UI 视觉对比循环 —— 给定设计
 
 Claude 自己识别 URL 类型,调上游拉资产,用 flutter-wright `run` 起 app、`goto` 到目标页、截图视觉比对、改 Dart `reload`,迭代到收敛,结束 `reset` + `stop` 清理设备。
 
+## 两种入口:Skill vs Command
+
+本仓库同时提供两种触发方式,指令体一致,差别只在**谁来触发**:
+
+| | `skills/flutter-visual-loop/SKILL.md` | `commands/flutter-visual-loop.md` |
+|---|---|---|
+| 触发方 | **模型自动判断**(model-invoked):Claude 读 `description`,命中"按 Figma/Mockplus 还原 Flutter 页面"等场景就自动唤起 | **只有你显式打** `/flutter-visual-loop ...`,模型不会自动调 |
+| `description` 的作用 | 触发信号——写得越像场景,越容易被自动调起 | 仅作 `/` 菜单里的说明文字 |
+| 接收输入 | 从对话上下文里自己识别 URL + route | 通过 `argument-hint` 提示,正文用 `$ARGUMENTS` 接收 |
+| 适合 | 希望"提到还原就自动兜底" | 希望**只在我明确要求时**才跑这套重流程 |
+
+> 注:即使在 SKILL 的 `description` 里写"手动触发不自动",那也只是软约束,模型仍可能自动调起。要**硬保证只显式触发**,slash command 是唯一干净的办法。
+>
+> 两份文件的编排指令保持一致——**改一处记得同步另一处**。
+
+**在 Codex 用**:Codex CLI 支持 custom prompts,把命令文件复制到 `~/.codex/prompts/flutter-visual-loop.md`,即可在 Codex 里用 `/flutter-visual-loop` 显式触发。但注意本 skill 是"瘦编排器",真正干活靠下面三个依赖——命令文件只搬指令文本,**不会把依赖带过去**;要在 Codex 端到端跑通,需在 Codex 侧另行配好 figma-context MCP、`mockplus-context` 与 `flutter-wright` 两个 skill。
+
 ## 仓库结构
 
 ```
 .
-├── skills/flutter-visual-loop/SKILL.md    # skill 本体(6 行)
+├── skills/flutter-visual-loop/SKILL.md     # skill 本体(自动触发,6 行)
+├── commands/flutter-visual-loop.md         # 同一编排的手动命令源文件(复制到 .claude/commands/ 即可 /flutter-visual-loop)
 ├── docs/superpowers/
 │   ├── specs/                              # 设计 spec
 │   └── plans/                              # 实施 plan

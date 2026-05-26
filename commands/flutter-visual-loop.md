@@ -1,0 +1,8 @@
+---
+description: 自主 Flutter UI → 设计稿 视觉验证循环（手动触发，不自动）
+argument-hint: <figma-or-mockplus-url> <target-flutter-route>
+---
+
+输入：$ARGUMENTS
+
+Build me an autonomous Flutter visual-loop. Given a design-source URL (Figma frame URL or Mockplus develop page URL) and a target Flutter route, the agent should: (1) fetch design data — for Figma call the figma-context MCP, for Mockplus invoke the `mockplus-context` skill via the Skill tool and consume its JSON output plus assets it downloads to a local directory, (2) start the app on the device by calling `flutter-wright` **run** — flutter-wright must own the `flutter run` daemon, or the hot-reload in step (6) won't work (the app must be started through flutter-wright, not by hand), (3) call `flutter-wright` to lock device size/density and `goto` the target route (programmatic navigation requires `flutter_wright_sdk` integrated in the app), (4) call `flutter-wright` to capture an on-device screenshot, (5) use vision to compare rendered-vs-design and produce a structured diff report (spacing off by Xpx, color mismatch, missing element, text invisible on background, etc.), (6) apply targeted Dart fixes and hot-reload via `flutter-wright` **reload**, (7) loop until visual delta is acceptable or 5 iterations hit, (8) before exit, restore device state — call `flutter-wright` **reset** (navigator back to root), **resetViewport** (undo the `wm size`/`density` lock from step 3), then **stop** (tear down the flutter-wright-owned daemon). Critically: do not transform or re-flatten the upstream design data; if mockplus-context's spec is insufficient that is mockplus-context's bug, not this skill's responsibility.
