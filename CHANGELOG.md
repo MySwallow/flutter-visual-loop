@@ -5,6 +5,23 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),版本规则遵循
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)。
 
+## [0.3.0] — 2026-05-26
+
+### 变更 — 对齐 flutter-wright 0.6.0
+
+flutter-wright 升级到 0.6.0(SDK 可选化 + AI 持有 `flutter run` daemon + 移除 mock),
+本 skill 的编排契约随之更新:
+
+- **SKILL.md**:编排序列新增 `run`(开头由 flutter-wright 起 app 并持有 daemon —— 0.6.0 的
+  `reload` 只热重载 flutter-wright 自己 `run` 起的 daemon,app 不再能由外部手动启动)与
+  `stop`(退出清理为 `reset` → `resetViewport` → `stop`,补上原本漏掉的 `resetViewport` 使设备分辨率也还原);并点明 `goto` 程序化导航需 app 集成 `flutter_wright_sdk`。
+- **README.md**:下层 flutter-wright 方法列表改为
+  `run / stop / health / goto / screenshot / reload / setViewport / resetViewport / reset`
+  (移除已删的 `mock`,补上新增的 `run` / `stop`);"怎么用"前提从 "app 跑在设备上" 改为
+  "由 flutter-wright `run` 起 app",并点明 SDK 是因 `goto` 导航而需。
+
+> 历史 `docs/superpowers/{specs,plans}/*` 为 point-in-time 存档,描述重构当时的契约,不回写。
+
 ## [0.2.0] — 2026-05-22
 
 ### 重构 — Skill (`skills/flutter-visual-loop`)

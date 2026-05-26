@@ -12,13 +12,13 @@ Claude Code skill,自主驱动 Flutter UI 视觉对比循环 —— 给定设计
 |---|---|---|---|
 | `figma-context` MCP | 上游 | 输入是 Figma frame URL 时,拉 frame data + 切图 | 任一兼容 Figma MCP 实现(自行配置) |
 | `mockplus-context` skill | 上游 | 输入是 Mockplus develop **page** URL 时,产出结构化 JSON(metadata + globalVars + nodes)+ 下载切图到指定目录 | <https://github.com/MySwallow/mockplus-context> |
-| `flutter-wright` skill | 下层 | 驱动 Flutter Android 设备(health / goto / screenshot / reload / setViewport / resetViewport / mock / reset) | <https://github.com/MySwallow/flutterwright> |
+| `flutter-wright` skill | 下层 | 驱动 Flutter Android 设备(run / stop / health / goto / screenshot / reload / setViewport / resetViewport / reset) | <https://github.com/MySwallow/flutterwright> |
 
 **上游二选一**:设计稿是 Figma → 只需要 `figma-context` MCP,**不**需要 mockplus-context;设计稿是 Mockplus(摹刻) → 只需要 `mockplus-context` skill,**不**需要 Figma MCP。下游 `flutter-wright` skill 任何场景都必需。三者均已就绪,端到端可跑。
 
 ## 怎么用
 
-在已经集成 `flutter_wright_sdk`(见 [flutterwright 仓库](https://github.com/MySwallow/flutterwright))且 app 跑在 Android 设备上的 Flutter 项目里,跟 Claude 说:
+在一个集成了 `flutter_wright_sdk` 的 Flutter 项目里(程序化 `goto` 导航需要它,见 [flutterwright 仓库](https://github.com/MySwallow/flutterwright)),接上 Android 设备或模拟器,跟 Claude 说:
 
 > 按这个 Figma frame 还原 `/order/detail` 页面:
 > https://www.figma.com/...
@@ -28,7 +28,7 @@ Claude Code skill,自主驱动 Flutter UI 视觉对比循环 —— 给定设计
 > 按这个 Mockplus 页面还原 `/cart` 页面:
 > https://app.mockplus.cn/app/.../develop/design/...
 
-Claude 自己识别 URL 类型,调上游拉资产,调 flutterwright 跑设备,迭代到视觉收敛。
+Claude 自己识别 URL 类型,调上游拉资产,用 flutter-wright `run` 起 app、`goto` 到目标页、截图视觉比对、改 Dart `reload`,迭代到收敛,结束 `reset` + `stop` 清理设备。
 
 ## 仓库结构
 
